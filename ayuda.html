@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportar Problemas</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Include Bootstrap CSS for styling (optional) -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .contact-form-container {
+            margin: 20px auto;
+            width: 80%;
+            max-width: 500px;
+            padding: 60px;
+            border: 2px solid black;
+            border-radius: 5px;
+            position: relative;
+        }
+        
+        .form-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        #volverBtn {
+            position: fixed;
+            top: 20px;
+            right: 10px;
+            z-index: 1000;
+            background-color: #0056b3;
+            border: 2px solid black;
+            border-radius: 10px;
+        }
+        
+        #enviarBtn {
+            width: 100%;
+            padding: 10px;
+            background-color: #0056b3;
+            color: white;
+            border: 2px solid black;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        
+        #enviarBtn:hover {
+            background-color: #125e23;
+        }
+        #volverBtn:hover {
+            background-color: #125e23;
+        }
+    </style>
+</head>
+<body>
+    <button id="volverBtn" class="btn btn-secondary">Volver</button>
+    <div class="contact-form-container">
+        <h1 class="form-header">Reportar Problemas</h1>
+        <form>
+            <div class="form-group">
+                <label for="userEmail">Correo Electrónico</label>
+                <input type="email" class="form-control" id="userEmail" name="userEmail" placeholder="ejemplo@correo.com" required>
+            </div>
+            <div class="form-group">
+                <label for="problemDescription">Descripción del Problema</label>
+                <textarea class="form-control" id="problemDescription" name="problemDescription" rows="4" placeholder="Describe el problema aquí..." required></textarea>
+            </div>
+            <button type="submit" id="enviarBtn">Enviar</button>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.getElementById('volverBtn').addEventListener('click', function() {
+            window.location.href = 'index.html'; // Adjust the navigation target if necessary
+        });
+    </script>
+</body>
+</html>

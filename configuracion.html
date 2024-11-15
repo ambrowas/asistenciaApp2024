@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPCIONES DE CONFIGURACIÓN</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Include Bootstrap CSS for styling (optional) -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .config-container {
+            margin: 20px;
+        }
+        .config-header {
+            margin-bottom: 30px;
+        }
+        .config-option {
+            margin-bottom: 15px;
+        }
+    
+        /* Corrected .border class with proper CSS syntax */
+        .border {
+            border: 2px solid #000000; /* Black border */
+        }
+    
+        /* Custom button styling including background-color, border, and rounded corners */
+        .btn {
+            background-color: #0056b3;
+            border: 2px solid black; /* Black border */
+            border-radius: 10px; /* Adjust this value for desired roundness */
+            color: white; /* White text color */
+            padding: 12px 20px; /* Adjusted for more width */
+            font-size: 12px; /* Consistent font size */
+            cursor: pointer; /* Cursor changes to pointer to indicate it's clickable */
+            transition: background-color 0.3s ease; /* Smooth transition for background color change */
+        }
+    
+        /* Hover effect for buttons */
+        .btn:hover {
+            background-color: #125e23;
+        }
+    </style>
+    <style>
+        .config-header {
+            margin-bottom: 30px;
+            font-size: 20px; /* Adjusted font size */
+        }
+        /* Other styles */
+    </style>
+    
+    
+    
+</style>
+
+</head>
+<body>
+    <button id="volverBtn" class="btn btn-secondary">VOLVER</button>
+    <div class="config-container">
+        <h1 class="config-header">OPCIONES DE CONFIGURACIÓN</h1>
+    
+        <div class="config-options-container">
+            <div class="config-option">
+                <label for="setting1">Opción de Configuración 1:</label>
+                <input type="checkbox" id="setting1" name="setting1">
+                <label for="setting1">Habilitar esta opción</label>
+            </div>
+            
+            <div class="config-option">
+                <label for="setting2">Opción configuración 2:</label>
+                <select id="setting2" name="setting2">
+                    <option value="low">Bajo</option>
+                    <option value="medium" selected>Medio</option>
+                    <option value="high">Alto</option>
+                </select>
+            </div>
+        
+            <div class="config-option">
+                <label for="setting3">Opción de Configuración 3:</label>
+                <input type="checkbox" id="setting3" name="setting3">
+                <label for="setting3">Habilitar esta opción</label>
+            </div>
+            
+            <div class="config-option">
+                <label for="setting4">Opción de configuración 4:</label>
+                <select id="setting4" name="setting4">
+                    <option value="low">Mínimo</option>
+                    <option value="medium" selected>Moderado</option>
+                    <option value="high">Máximo</option>
+                </select>
+            </div>
+        </div>
+        
+    </div>
+    <button id="guardarCambiosBtn" class="btn btn-primary">GUARDAR CAMBIOS</button>
+   
+</div>
+
+<!-- Optional JavaScript; choose one of the two! -->
+
+<!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    // JavaScript for handling configuration changes
+    document.querySelector('.btn-primary').addEventListener('click', function() {
+        // Implement saving logic here
+        alert('Cambios guardados con éxito.');
+    });
+</script>
+<script>
+    document.getElementById('volverBtn').addEventListener('click', function() {
+        window.location.href = 'index.html';
+    });
+</script>
+
+
+</body>
+</html>

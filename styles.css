@@ -1,0 +1,331 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: auto; /* Changed from 100% to auto to accommodate content height */
+    overflow: auto; /* Allows scrolling when content exceeds the viewport */
+    position: relative;
+}
+
+.embassy-container {
+    text-align: left;
+    padding-left: 10px;
+}
+
+.embassy-text {
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.embassy-flag {
+    display: block;
+    margin-top: 10px;
+    margin-left: 60px;
+    width: 50px;
+    height: auto;
+}
+
+.logo-container {
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.logo {
+    width: 25%;
+    height: auto;
+}
+
+.centered-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 220px;
+}
+
+button, .btn {
+    padding: 12px 20px; /* Adjusted for more width */
+    font-size: 12px; /* Consistent font size */
+    cursor: pointer;
+    background-color: #0056b3;
+    color: white;
+    border: 2px solid black;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    display: inline-block; /* Ensure buttons are treated as inline-block for proper sizing */
+    text-align: center; /* Center text inside button */
+    width: auto; /* Adjust width based on content, or set a fixed width if preferred */
+    min-width: 100px; /* Example: set a minimum width if auto width is used */
+}
+
+
+button:hover, .btn:hover {
+    background-color: #125e23;
+}
+
+
+@import url('https://fonts.googleapis.com/css?family=PT+Sans');
+
+body {
+    background: #fff;
+    font-family: 'PT Sans', sans-serif;
+}
+
+h2 {
+    padding-top: 1.5rem;
+}
+
+a {
+    color: #333;
+}
+
+a:hover {
+    color: #da5767;
+    text-decoration: none;
+}
+
+.card {
+    border: 0.40rem solid #f8f9fa;
+    top: 10%;
+}
+
+
+#attendanceModal {
+    display: none;
+}
+
+.equal-btn {
+    width: 150px;
+    margin: 20px 20px;
+}
+
+#myTextBox {
+    width: 600px;
+    padding: 50px;
+    margin: 5px;
+    border: 2px solid #040404;
+    border-radius: 8px;
+}
+
+.modal-content-container {
+    width: 300px;
+    margin: 0 auto;
+    padding: 10px;
+    border: 1px solid #040404;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+}
+
+#modalContent {
+    width: 100%;
+    height: 200px;
+    border: black;
+    border-radius: 4px;
+    padding: 10px;
+    resize: none;
+    background-color: transparent;
+}
+
+#popupContainer {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border: 2px solid black;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+    width: 400px;
+    text-align: center;
+}
+
+.popup-section, .greeting-section, .quote-section {
+    padding: 15px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* Style for greeting and quote sections */
+.greeting-section, .quote-section {
+    background-color: #f0f0f0;
+    border-bottom: 1px solid #ccc;
+    border: 2px solid rgb(34, 4, 85); /* Add a black border */
+    border-radius: 5px;
+}
+
+/* Style for the OK button section */
+.ok-button-section {
+    background-color: transparent;
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+/* Style for the OK button itself */
+.ok-button {
+    font-size: 16px;
+    color: white;
+    background-color: #007bff;
+    border: 2px solid black; /* Add a black border */
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.ok-button:hover {
+    background-color: #125e23;
+}
+/* Registration Form Specific Styles */
+.registration-form {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* Four columns for wider screens */
+    gap: 10px; /* Space between grid items */
+    width: 90%;
+    margin: 20px auto; /* Center the form with margin */
+    /* No changes needed here for scrolling, just ensure body and html are adjusted */
+}
+/* Adjust form group for label alignment with inputs */
+.registration-form .form-group {
+    display: contents; /* Use 'contents' to keep label and input grouped but flexible for grid placement */
+}
+.registration-form .photo-placeholder-wrapper img {
+    width: 40px; /* Adjusted for a smaller size */
+    height: 40px; /* Equal width and height for a square */
+    border-radius: 0%; /* Ensures the image is square by removing any border radius */
+    display: block; /* Centers the image horizontally with automatic margins */
+    margin: 0 auto; /* Additional centering for the image */
+}
+
+
+/* Hide the actual file input */
+.registration-form input[type="file"] {
+    display: none;
+}
+
+/* Utility classes */
+.d-flex { display: flex; }
+.justify-content-between { justify-content: space-between; }
+.mb-3 { margin-bottom: 1rem; }
+
+@media (max-width: 768px) {
+    /* For smaller screens, adjust to two columns */
+    .registration-form {
+        grid-template-columns: repeat(2, 1fr); /* Two columns on small screens */
+    }
+
+    .registration-form button[type="submit"] {
+        grid-column: 1 / -1; /* Button spans both columns on smaller screens */
+    }
+}
+#dismissBtn {
+    border: 2px solid #000000; /* Black border */
+    border-radius: 5px; /* Rounded corners */
+  }
+  .photo-placeholder-wrapper {
+    display: flex;
+    justify-content: center; /* Center the child elements horizontally */
+    width: 100%; /* Take the full width to allow centering */
+}
+.form-actions {
+    display: flex;
+    justify-content: center; /* Center the buttons horizontally */
+    width: 100%; /* Take the full width to allow centering */
+    gap: 10px; /* Optional: space between buttons */
+}
+@keyframes flash {
+    0% { background-color: red; }
+    100% { background-color: transparent; }
+}
+
+.flash {
+    animation: flash 0.5s;
+}
+
+#reportSummary p {
+    margin-bottom: 5px; /* Reduce the bottom margin */
+    line-height: 1.2; /* Adjust the line height for less space between lines */
+}
+
+.red-highlight {
+    color: red;
+}
+.clickable-row:hover::after {
+    content: "Click para justificar";
+    position: absolute;
+    right: 20px; /* Adjust as necessary */
+    white-space: nowrap;
+    z-index: 1;
+    background: #f8f9fa; /* Light background */
+    color: #333; /* Text color */
+    padding: 5px;
+    border-radius: 5px;
+    font-size: 12px; /* Smaller font size for the tooltip */
+}
+
+/* Adjust the modal size and content size */
+.modal-dialog {
+    transform: scale(0.25); /* Reduce size to 50% */
+    transform-origin: top center; /* Adjust the origin of transformation */
+}
+
+/* Adjust the font size inside the modal */
+#justificacionModal .modal-content {
+    font-size: 0.800rem; /* Smaller font size, adjust as needed */
+}
+
+/* Increase the borders of the modal */
+#justificacionModal .modal-content {
+    border-width: 4px; /* Thicker border */
+}
+
+#volverBtn {
+    position: fixed; /* Fixed position relative to the viewport */
+    top: 20px; /* Distance from the top */
+    right: 20px; /* Distance from the right */
+    z-index: 1000; /* Ensure it's above other content */
+}
+
+.config-options-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    width: 50%; /* Adjust width as needed */
+    height: auto; /* Adjust height as needed */
+    padding: 60px;
+    border: 2px solid black; /* Square box border */
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Optional: adds shadow for depth */
+    border-radius: 10px; /* Optional: rounds the corners of the square box */
+}
+
+.config-option {
+    width: 100%; /* Ensures config options use the full width of the container */
+    text-align: center; /* Centers the text of each config option */
+    margin-bottom: 15px; /* Keeps original spacing between options */
+}
+#guardarCambiosBtn {
+    display: block; /* Allows margin auto to be applied */
+    margin: 20px auto; /* Centers the button horizontally with auto margins and adds some space above */
+    padding: 10px 50px; /* Adjusts padding to make the button wider and taller */
+}
+.red-highlight {
+    color: red; /* Or any other style changes that make it noticeable */
+}
+
+
+
+
+ 

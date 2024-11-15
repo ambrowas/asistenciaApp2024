@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <title>REGISTRO DE EMPLEADOS</title>
+        <meta charset="UTF-8">
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="styles.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+<body>
+    <div class="registration-form-container">
+        <div class="photo-placeholder-wrapper">
+            <label for="foto" style="cursor: pointer; display: inline-block; background-color: transparent; border: none; margin-top: 20px; margin-left: 30px;">
+                <img id="photoPlaceholder" src="avatar.png" alt="photo placeholder" style="width: 80px; height: 80px; border: 1px solid black;">
+            </label>
+            <input type="file" id="foto" name="foto" accept="image/*" style="display: none;" onchange="previewImage(event)">
+            <div id="photoError" class="invalid-feedback" style="display: none;">Debes subir una foto de perfil.</div>
+        </div>
+        <form id="registrationForm" class="registration-form">
+            <div class="form-group">
+                <label for="nombre">Nombre Completo</label>
+                <input type="text" id="nombre" name="nombre" required minlength="4" class="form-control" placeholder="Nombre Completo">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required class="form-control" placeholder="Email">
+            </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Contraseña</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required class="form-control" placeholder="Confirmar Contraseña">
+                </div>
+                <div class="form-group">
+                    <label for="fechaNacimiento">Fecha de Nacimiento</label>
+                    <input type="date" id="fechaNacimiento" name="fechaNacimiento" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="telefono">Teléfono</label>
+                    <input type="tel" id="telefono" name="telefono" required pattern="\+?\d*" title="Por favor, introduce un número de teléfono válido.">
+        
+                </div>                
+                <div class="form-group">
+                    <label for="direccion">Dirección</label>
+                    <input type="text" id="direccion" name="direccion" required>
+                </div>
+                <div class="form-group">
+                    <label for="posicion">Posición</label>
+                    <input type="text" id="posicion" name="posicion" required>
+                </div>
+                  <div class="form-group">
+                    <label for="nombrecontactoEmergencia">Contacto de Emerg.</label>
+                    <input type="text" id="nombrecontactoEmergencia" name="nombrecontactoEmergencia" required>
+                </div>
+                <div class="form-group">
+                    <label for="numerocontactoEmergencia">Núm. Contacto de Emerg.</label>
+                    <input type="tel" id="numerocontactoEmergencia" name="numerocontactoEmergencia" required pattern="\+?\d*" title="Por favor, introduce un número de teléfono de contacto de emergencia válido.">
+                </div>                
+            <div class="form-actions d-flex justify-content-center">
+                <button type="submit" class="btn btn-primary mr-2">Registrar</button>
+                <button type="button" class="btn btn-secondary" onclick="window.history.back();">Volver</button>
+            </div>
+        </form>
+    </div>
+    <script src="registration-validation.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js';
+        import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js';
+    
+        const firebaseConfig = {
+    apiKey: "AIzaSyD32cqEuZx-ZAEnk6BCpxxneTzJvwK48dE",
+    authDomain: "asistncia-b2394.firebaseapp.com",
+    projectId: "asistncia-b2394",
+    storageBucket: "asistncia-b2394.appspot.com",
+    messagingSenderId: "523215954194",
+    appId: "1:523215954194:web:039c5425f0984526a8d3cb",
+    measurementId: "G-T7MDR9CEVT"
+};
+    
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        console.log("Firestore database initialized:", db); // Add this line
+        const storage = getStorage(app);
+
+
+
+// Inside your event listener for the registration form submission
+document.getElementById('registrationForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    // Extract form values
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    try {
+        // Create the user account with email and password
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Now that the user is created, you can proceed with signing in and saving user data
+        // Sign in the user with email and password
+        await signInWithEmailAndPassword(auth, email, password);
+
+        // Now that the user is signed in, you can proceed with saving the user data
+        const nombre = document.getElementById('nombre').value.toUpperCase();
+        const posicion = document.getElementById('posicion').value;
+        const fechaNacimiento = document.getElementById('fechaNacimiento').value;
+        const telefono = document.getElementById('telefono').value;
+        const direccion = document.getElementById('direccion').value;
+        const contactoEmergencia = document.getElementById('nombrecontactoEmergencia').value;
+        const numeroContactoEmergencia = document.getElementById('numerocontactoEmergencia').value;
+
+        // Ensure userEmail is assigned correctly
+        const userEmail = user.email;
+
+        // Create userData object
+        const userData = {
+            email: email,
+            nombre: nombre,
+            dateOfBirth: fechaNacimiento,
+            telefono: telefono,
+            direccion: direccion,
+            posicion: posicion,
+            contactoEmergencia: contactoEmergencia,
+            numeroContactoEmergencia: numeroContactoEmergencia
+        };
+
+        // Validate and save user data to Firestore
+        const isValid = await validateUserData(userData);
+        if (isValid) {
+            await saveUserDataToFirestore(db, userData, userEmail); // Pass userEmail to the function
+            alert('Registro exitoso. El usuario ha sido registrado correctamente.');
+        } else {
+            alert('Los datos de registro no son válidos. Por favor, revise los campos.');
+        }
+    } catch (error) {
+        console.error("Error de registro:", error);
+        if (error.code === "auth/invalid-login-credentials") {
+            alert("Credenciales de inicio de sesión no válidas. Verifique el correo electrónico y la contraseña.");
+        } else {
+            alert("Error de registro: " + error.message);
+        }
+    }
+});
+
+async function fetchUserDataFromFirestore(nombre) {
+    try {
+        const employeeDocRef = doc(db, 'EMPLEADOS', nombre);
+        const docSnapshot = await getDoc(employeeDocRef);
+
+        if (docSnapshot.exists()) {
+            return docSnapshot.data();
+        } else {
+            console.log('No se encontraron datos de usuario en Firestore para el nombre:', nombre);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error al obtener los datos del usuario desde Firestore:', error);
+        return null;
+    }
+}
+
+async function validateUserData(userData) {
+    try {
+        if (!userData || !userData.nombre || !userData.email || !userData.dateOfBirth) {
+            throw new Error('Datos de usuario no válidos. Faltan propiedades requeridas.');
+        }
+
+        const employeeDocRef = doc(db, 'EMPLEADOS', userData.nombre);
+        const docSnapshot = await getDoc(employeeDocRef);
+
+        if (docSnapshot.exists()) {
+            const employeeData = docSnapshot.data();
+
+            console.log('Datos del usuario ingresados:', userData); // Registrar los datos ingresados en el formulario
+            console.log('Datos del empleado encontrados en la base de datos:', employeeData); // Registrar los datos encontrados en la base de datos
+
+            if (!employeeData || !employeeData['email'] || !employeeData['fechaNacimiento']) {
+                throw new Error('Faltan datos del empleado o están incompletos.');
+            }
+
+            // Adaptar el formato de la fecha de nacimiento del empleado
+            const employeeDateOfBirth = formatDate(employeeData['fechaNacimiento']);
+
+            if (
+                userData.email === employeeData['email'] &&
+                userData.dateOfBirth === employeeDateOfBirth
+            ) {
+                return true;
+            } else {
+                throw new Error('Los datos no coinciden. Contacte al administrador.');
+            }
+        } else {
+            throw new Error('Este usuario no existe.');
+        }
+    } catch (error) {
+        console.error('Error al validar los datos del usuario:', error);
+        alert("Error al validar los datos del usuario: " + error.message);
+        return false;
+    }
+}
+
+async function saveUserDataToFirestore(db, userData, userEmail) {
+    const { nombre, email, dateOfBirth, telefono, direccion, posicion, contactoEmergencia, numeroContactoEmergencia } = userData;
+    const employeeID = `EGDC${dateOfBirth.replaceAll('-', '')}`;
+
+    try {
+        // Check if a file is selected
+        const userImageFile = document.getElementById('foto').files[0];
+        if (!userImageFile) {
+            throw new Error('No se ha seleccionado ningún archivo de imagen.');
+        }
+
+        const storageRef = ref(storage, `userImages/${userEmail}/${userImageFile.name}`);
+        await uploadBytes(storageRef, userImageFile);
+
+        const imageUrl = await getDownloadURL(storageRef);
+
+        await setDoc(doc(db, "EMPLEADOS", nombre), {
+            email: email,
+            nombre: nombre,
+            fechaNacimiento: dateOfBirth,
+            employeeID: employeeID,
+            telefono: telefono,
+            direccion: direccion,
+            posicion: posicion,
+            contactoEmergencia: contactoEmergencia,
+            numeroContactoEmergencia: numeroContactoEmergencia,
+            userImageUrl: imageUrl
+        });
+
+        localStorage.setItem('userName', nombre);
+        localStorage.setItem('userPhotoURL', imageUrl);
+        localStorage.setItem('employeeID', employeeID);
+
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Error al guardar los datos del usuario en Firestore:', error);
+        alert('Error al guardar los datos del usuario en Firestore: ' + error.message);
+    }
+}
+
+function formatDate(dateString) {
+        const parts = dateString.split('-');
+        const formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+        return formattedDate;
+    }
+
+    function previewImage(event) {
+        const reader = new FileReader();
+        reader.onload = function () {
+            const output = document.getElementById('photoPlaceholder');
+            output.src = reader.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    document.getElementById('foto').onchange = previewImage;
+</script>

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe de Asistencia</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.21/datatables.min.css"/>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.7/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.7/locale/es.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.21/datatables.min.js"></script>
+    <script>
+        dayjs.locale('es'); // Set the locale to Spanish
+    </script>
+    <style>
+        h1 {
+            font-weight: bold;
+            font-size: 24px; /* Adjust the size as needed */
+        }
+        h3, #userDisplayName, #employeeIDDisplay {
+            font-size: 18px; /* Adjust the size as needed */
+        }
+        .red-text {
+            color: red;
+        }
+        /* Add this rule for the clickable row cursor change */
+        .clickable-row, .text-danger {
+            cursor: pointer;
+        }
+        .highlighted-row td {
+            color: red; /* Red text */
+            cursor: pointer; /* Changes cursor to a pointer to indicate the row is clickable */
+        }
+        #reportSummary {
+            margin-bottom: 25px; /* Adds space between the summary div and the table */
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <h1>Informe de Asistencia</h1>
+    <h3 id="userName"> <span id="userDisplayName"></span></h3>
+    <h3 id="userEmployeeID"> <span id="employeeIDDisplay"></span></h3>
+    <div class="form-group">
+        <select id="monthSelector" class="form-control" aria-label="Selecciona el Mes">
+        </select>
+    </div>
+    <!-- Justification Modal Structure with Form Content -->
+    <div id="justificacionModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <!-- Remove the close button from here -->
+                    <h4 class="modal-title" style="font-size: 20px;">Justificación</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="justificationForm">
+                        <div class="form-group">
+                            <label for="justificationReason">Razón:</label>
+                            <select id="justificationReason" class="form-control">
+                                <option value="Enfermedad">Enfermedad</option>
+                                <option value="Permiso Pre-concedido">Permiso Pre-concedido</option>
+                                <option value="Emergencia">Emergencia</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="justificationMessage">Mensaje:</label>
+                            <textarea id="justificationMessage" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                            <button type="submit" class="btn btn-primary">Enviar</button>
+                        </div>
+                    </form>
+                </div>                
+                <div id="noDataAlert" style="display: none;" class="alert alert-warning">
+                    Los datos para este mes todavia no estan disponibles.
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="reportSummary">
+        <h3><b>Sumario</b></h3>
+        <p>Horas Trabajadas: <span id="totalHoursWorked">---</span></p>
+        <p>Días Ausente: <span id="daysAbsent">---</span></p>
+        <p>Días Tarde: <span id="daysLate">---</span></p>
+        <p>Días Incompletos: <span id="incompleteDays">---</span></p>
+    </div>
+
+    <div style="position: absolute; top: 10px; right: 10px;">
+        <button type="button" class="btn btn-secondary" onclick="window.location.href = 'index.html';">VOLVER</button>
+    </div>
+    <div id="tableContainer"></div>
+    <table id="attendanceDataTable" class="table table-striped">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Hora de Entrada</th>
+                <th>Hora de Salida</th>
+                <th>Estado</th>
+                <th>Justificación</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table rows will be dynamically added here based on your script -->
+        </tbody>
+        <input type="hidden" id="currentRecordDate" value="">
+    </table>
+</div>
+
+<script type="module">
+    var currentRecordDate; 
+    let userName = localStorage.getItem('userName');
+
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getFirestore, doc, getDoc, setDoc, serverTimestamp, updateDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD32cqEuZx-ZAEnk6BCpxxneTzJvwK48dE",
+        authDomain: "asistncia-b2394.firebaseapp.com",
+        projectId: "asistncia-b2394",
+        storageBucket: "asistncia-b2394.appspot.com",
+        messagingSenderId: "523215954194",
+        appId: "1:523215954194:web:039c5425f0984526a8d3cb",
+        measurementId: "G-T7MDR9CEVT"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const user = auth.currentUser;
+    if (!db) {
+        console.error('Firestore is not properly initialized.');
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        console.log('Document loaded.');
+        const userName = localStorage.getItem('userName');
+        dayjs.locale('es');
+
+        document.getElementById('userDisplayName').textContent = userName || 'No Name Set';
+
+        await setupMonthSelector(userName);
+        setupEventListeners(userName);
+    });
+
+    function setupEventListeners(userName) {
+        // Listen for changes on the month selector to fetch data
+        $('#monthSelector').change(async function() {
+            const selectedMonth = this.value; // Get the selected month from the selector
+            if (selectedMonth) {
+                console.log(`User selected month: ${selectedMonth}`);
+                fetchAndDisplayAttendanceData(userName, selectedMonth); // Fetch data for selected month
+            }
+        });
+
+        // Handle form submission with the current month in context
+        $('#justificationForm').on('submit', function(e) {
+            e.preventDefault();
+            const currentRecordDate = $('#currentRecordDate').val();
+            console.log('Form Submit - Current Record Date:', currentRecordDate);
+            submitJustificationForm(userName, currentRecordDate);
+        });
+    }
+
+    async function submitJustificationForm(event) {
+        if (event && typeof event.preventDefault === 'function') {
+            event.preventDefault();  // Prevent default form submission
+        }
+
+        // Retrieve username from localStorage
+        const userName = localStorage.getItem('userName');
+        
+        // Extract the date from the hidden input or another source
+        const currentRecordDate = $('#currentRecordDate').val();
+
+        if (!userName || !currentRecordDate) {
+            console.error('Missing userName or currentRecordDate for justification');
+            alert('Error al guardar la justificación. Falta información del usuario o la fecha.');
+            return;
+        }
+
+        // Prepare data for submission
+        const reason = $('#justificationReason').val();
+        const message = $('#justificationMessage').val();
+        const timestamp = serverTimestamp(); // Assuming this function correctly fetches a Firebase server timestamp
+
+        // Constructing the nested justification object
+        const justificationData = {
+            justification: {
+                reason: reason,
+                message: message,
+                timestamp: timestamp
+            }
+        };
+
+        // Parse the month and year from the currentRecordDate to form the Firestore path
+        const [weekday, dayMonthYear] = currentRecordDate.split(' ');
+        const [day, month, year] = dayMonthYear.split('-');
+        const yearMonth = `${year}-${month}`; // "2024-ABRIL"
+
+        // Construct Firestore path dynamically based on username and month
+        const firestorePath = `ASISTENCIA/${userName}/LOGS/${yearMonth}`;
+        console.log('Target Firestore Path:', firestorePath);
+
+        // Reference to Firestore document
+        const docRef = doc(db, firestorePath);
+
+        try {
+            // Fetch existing document to update
+            const docSnap = await getDoc(docRef);
+            let logsData = docSnap.exists() ? docSnap.data() : {};
+            
+            // Update or create new entry for the given date with nested justification
+            logsData[currentRecordDate] = {...logsData[currentRecordDate], ...justificationData};
+
+            // Commit the update to Firestore
+            await setDoc(docRef, logsData, { merge: true });
+            console.log('Justification added successfully:', currentRecordDate);
+
+            $('#justificacionModal').modal('hide');
+            alert('Justificación guardada correctamente.');
+            $('#justificationForm')[0].reset();
+        } catch (error) {
+            console.error("Error updating justification:", error);
+            alert('Error al guardar la justificación: ' + error.message);
+        }
+    }
+
+    function formatDateWithWeekdaySpanish(dateString) {
+        console.log('Original Date String:', dateString);  // Debug input
+        if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {  // Checks if date is already in YYYY-MM-DD format
+            return dateString;  // Return as is if already formatted correctly
+        }
+
+        const parts = dateString.split(' ');  // Split into ["VIERNES", "12-ABRIL-2024"]
+        if (parts.length < 2) {
+            console.error("Incorrect date format:", dateString);
+            return "INVALID DATE";
+        }
+
+        const dayMonthYear = parts[1];  // "12-ABRIL-2024"
+        const [day, monthName, year] = dayMonthYear.split('-');
+        const monthMap = {
+            'ENERO': '01', 'FEBRERO': '02', 'MARZO': '03', 'ABRIL': '04',
+            'MAYO': '05', 'JUNIO': '06', 'JULIO': '07', 'AGOSTO': '08',
+            'SEPTIEMBRE': '09', 'OCTUBRE': '10', 'NOVIEMBRE': '11', 'DICIEMBRE': '12'
+        };
+        const month = monthMap[monthName.toUpperCase()];
+        if (!month) {
+            console.error("Invalid month name:", monthName);
+            return "INVALID DATE";
+        }
+
+        const formattedDate = `${year}-${month}-${day}`;
+        console.log('Formatted Date:', formattedDate);  // Debug output
+        return formattedDate;
+    }
+
+    function setUserDisplayInfo() {
+        const employeeId = localStorage.getItem('employeeID') || 'No Employee ID Set';
+        document.getElementById('userDisplayName').textContent = userName;
+        document.getElementById('employeeIDDisplay').textContent = employeeId;
+    }
+    
+    async function fetchAndDisplayAttendanceData(userName, selectedMonthDisplay) {
+        console.log(`Fetching data for user: ${userName}, month: ${selectedMonthDisplay}`);
+
+        try {
+            const attendanceRef = doc(db, `ASISTENCIA/${userName}/LOGS/${selectedMonthDisplay}`);
+            const docSnap = await getDoc(attendanceRef);
+
+            if (docSnap.exists() && Object.keys(docSnap.data()).length > 0) {
+                console.log(`Data successfully loaded for ${selectedMonthDisplay}`);
+                const data = docSnap.data();
+                const processedData = await processAttendanceRecords(data);
+                console.log("Processed Attendance Records:", processedData.records);
+
+                initializeAndPopulateDataTable(processedData.records);
+                
+                updateAttendanceSummary(processedData, selectedMonthDisplay);
+                applySummaryConditionalFormatting();
+                console.log("DataTable and summary should now be updated with new data.");
+            } else {
+                console.log("No data found for the selected month.");
+                // Optionally clear the data table and summary here to reflect that no data was found
+            }
+        } catch (error) {
+            console.error(`Error fetching attendance data:`, error);
+        }
+    }
+
+    async function setupMonthSelector(userName) {
+        dayjs.locale('es'); // Ensure locale is set for correct month names
+        let optionsHtml = '<option value="">ESCOGE UN MES</option>';
+    
+        try {
+            const logsCollectionRef = collection(db, `ASISTENCIA/${userName}/LOGS`);
+            const logsSnapshot = await getDocs(logsCollectionRef);
+    
+            if (logsSnapshot.size > 0) {
+                logsSnapshot.forEach(doc => {
+                    optionsHtml += `<option value="${doc.id}">${doc.id}</option>`; // Use the ID directly as it matches the required format
+                });
+                document.getElementById('monthSelector').innerHTML = optionsHtml;
+            }
+        } catch (error) {
+            console.error('Error fetching or populating months:', error);
+        }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            let employeeID = localStorage.getItem('employeeID');
+            if (!employeeID) {
+                console.log("Attempting to fetch employee ID from Firestore for user:", user.uid);
+                employeeID = await fetchEmployeeId(user.uid);
+                if (employeeID) {
+                    localStorage.setItem('employeeID', employeeID);
+                } else {
+                    console.log("Employee ID not found for user:", user.uid);
+                }
+            }
+            updateUIWithUserInfo(user.displayName, employeeID);
+        } else {
+            console.log("User is not logged in");
+        }
+    });
+
+    function updateUIWithUserInfo(displayName, employeeID) {
+        const currentDisplayName = document.getElementById('userDisplayName').textContent;
+        if (!currentDisplayName || currentDisplayName === 'No Name') {
+            document.getElementById('userDisplayName').textContent = displayName || 'No Name';
+        }
+        const currentEmployeeId = document.getElementById('employeeIDDisplay').textContent;
+        if (!currentEmployeeId || currentEmployeeId === 'No Employee ID') {
+            document.getElementById('employeeIDDisplay').textContent = employeeID;
+        }
+    }
+
+    function calculateWorkingDaysInMonth(yearMonth) {
+        const startDate = parseYearMonthToDayjs(yearMonth).startOf('month');
+        const endDate = startDate.endOf('month');
+        let workingDays = 0;
+
+        for (let day = startDate; day.isBefore(endDate) || day.isSame(endDate, 'day'); day = day.add(1, 'day')) {
+            // Workdays are Monday (1) to Friday (5)
+            if (day.day() >= 1 && day.day() <= 5) {
+                workingDays += 1;
+            }
+        }
+        console.log(`Working days in month: ${workingDays}`);
+        return workingDays;
+    }
+
+    function calculateExpectedHours(yearMonth) {
+        const workingDays = calculateWorkingDaysInMonth(yearMonth);
+        const startDate = parseYearMonthToDayjs(yearMonth).startOf('month');
+        const endDate = startDate.endOf('month');
+        let fridaysCount = 0;
+
+        for (let day = startDate; day.isBefore(endDate) || day.isSame(endDate, 'day'); day = day.add(1, 'day')) {
+            if (day.day() === 5) {
+                fridaysCount++;
+            }
+        }
+
+        const fullDays = workingDays - fridaysCount;
+        const expectedHours = (fullDays * 7.5) + (fridaysCount * 4.5);
+        console.log(`Expected hours in month: ${expectedHours}`);
+        return { workingDays, expectedHours };
+    }
+
+    function parseTime(timeString) {
+    if (timeString === "--") {
+        return null;
+    }
+
+    if (!timeString) {
+        return null;
+    }
+
+    const parts = timeString.split(':');
+    if (parts[0].length === 1) {
+        parts[0] = '0' + parts[0]; // Pad single-digit hour
+    }
+    const paddedTimeString = parts.join(':');
+
+    const date = new Date(`1970-01-01T${paddedTimeString}`);
+    if (isNaN(date.getTime())) {
+        return null;
+    }
+
+    return dayjs(date);
+}
+
+    function determineStatus(record) {
+    const entryTime = parseTime(record.entryTime);
+    const exitTime = parseTime(record.exitTime);
+
+    if (!entryTime && !exitTime) {
+        return 'Ausente';
+    } else if (!entryTime || !exitTime) {
+        return 'Incompleto';
+    } else if (entryTime.isAfter(dayjs('1970-01-01T09:30:00'))) {
+        return 'Tarde';
+    } else {
+        return 'Presente';
+    }
+}
+
+    function processAttendanceRecords(data) {
+    const records = [];
+    let totalHoursWorked = 0;
+    let daysAbsent = 0;
+    let lateArrivals = 0;
+    let incompleteDays = 0;
+
+    for (const [dateWithWeekday, record] of Object.entries(data)) {
+        const status = determineStatus(record);
+        const dateParts = dateWithWeekday.split(' ');
+        const sortableDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+
+        if (status === 'Ausente') {
+            daysAbsent++;
+        } else if (status === 'Incompleto') {
+            incompleteDays++;
+            totalHoursWorked += 4; // Count incomplete day as half a working day (4 hours)
+        } else if (status === 'Tarde') {
+            lateArrivals++;
+        } else if (status === 'Presente') {
+            const entryTime = parseTime(record.entryTime);
+            const exitTime = parseTime(record.exitTime);
+
+            if (entryTime && exitTime) {
+                const hoursWorkedToday = exitTime.diff(entryTime, 'hour', true);
+                totalHoursWorked += hoursWorkedToday;
+            }
+        }
+
+        records.push({
+            date: dateWithWeekday,
+            sortableDate: sortableDate,
+            entryTime: record.entryTime || '--',
+            exitTime: record.exitTime || '--',
+            status: status,
+            justification: record.justification || ""
+        });
+    }
+
+    return {
+        records,
+        totalHoursWorked,
+        daysAbsent,
+        lateArrivals,
+        incompleteDays
+    };
+}
+
+    function updateAttendanceSummary(data, yearMonth) {
+    const { expectedHours, workingDays } = calculateExpectedHours(yearMonth);
+
+    if (workingDays === 0) {
+        document.getElementById('totalHoursWorked').textContent = `0 / 0 (0%)`;
+        document.getElementById('daysAbsent').textContent = `0 / 0 (0%)`;
+        document.getElementById('daysLate').textContent = `0 / 0 (0%)`;
+        document.getElementById('incompleteDays').textContent = `0 / 0 (0%)`;
+        return;
+    }
+
+    const totalHoursWorked = data.totalHoursWorked;
+    const daysAbsent = data.daysAbsent;
+    const lateArrivals = data.lateArrivals;
+    const incompleteDays = data.incompleteDays;
+
+    const percentageWorked = expectedHours > 0 ? Math.round((totalHoursWorked / expectedHours) * 100) : 0;
+    const percentageAbsent = workingDays > 0 ? Math.round((daysAbsent / workingDays) * 100) : 0;
+    const percentageLate = workingDays > 0 ? Math.round((lateArrivals / workingDays) * 100) : 0;
+    const percentageIncomplete = workingDays > 0 ? Math.round((incompleteDays / workingDays) * 100) : 0;
+
+    document.getElementById('totalHoursWorked').textContent = `${totalHoursWorked.toFixed(2)} / ${expectedHours.toFixed(2)} (${percentageWorked}%)`;
+    document.getElementById('daysAbsent').textContent = `${daysAbsent} / ${workingDays} (${percentageAbsent}%)`;
+    document.getElementById('daysLate').textContent = `${lateArrivals} / ${workingDays} (${percentageLate}%)`;
+    document.getElementById('incompleteDays').textContent = `${incompleteDays} / ${workingDays} (${percentageIncomplete}%)`;
+}
+
+    function applySummaryConditionalFormatting() {
+        const totalHoursWorkedText = document.getElementById('totalHoursWorked').textContent.split('/')[0];
+        const totalHoursWorked = parseFloat(totalHoursWorkedText.trim()) || 0;
+        const expectedHours = parseFloat(document.getElementById('totalHoursWorked').textContent.split('/')[1].split('(')[0].trim()) || 0;
+
+        const daysAbsent = parseInt(document.getElementById('daysAbsent').textContent.split('/')[0].trim()) || 0;
+        const workingDays = parseInt(document.getElementById('daysAbsent').textContent.split('/')[1].split('(')[0].trim()) || 0;
+
+        const lateArrivals = parseInt(document.getElementById('daysLate').textContent.split('/')[0].trim()) || 0;
+        const incompleteDays = parseInt(document.getElementById('incompleteDays').textContent.split('/')[0].trim()) || 0;
+
+        const percentageWorked = expectedHours > 0 ? (totalHoursWorked / expectedHours) * 100 : 0;
+        const percentageAbsent = workingDays > 0 ? (daysAbsent / workingDays) * 100 : 0;
+        const percentageLate = workingDays > 0 ? (lateArrivals / workingDays) * 100 : 0;
+        const percentageIncomplete = workingDays > 0 ? (incompleteDays / workingDays) * 100 : 0;
+
+        document.getElementById('totalHoursWorked').classList.toggle('red-highlight', percentageWorked < 85);
+        document.getElementById('daysAbsent').classList.toggle('red-highlight', percentageAbsent > 15);
+        document.getElementById('daysLate').classList.toggle('red-highlight', percentageLate > 15);
+        document.getElementById('incompleteDays').classList.toggle('red-highlight', percentageIncomplete > 15);
+    }
+
+    function shouldHighlightRow(record) {
+        const entryTime = record.entryTime ? dayjs(`1970-01-01T${record.entryTime}`) : null;
+        const exitTime = record.exitTime ? dayjs(`1970-01-01T${record.exitTime}`) : null;
+        const isLate = entryTime && entryTime.isAfter(dayjs('1970-01-01T09:45'));
+        const isIncomplete = record.entryTime && !record.exitTime;
+        const isAbsent = !record.entryTime && !record.exitTime;
+        return isLate || isIncomplete || isAbsent;
+    }
+    
+    function handleNoDataFound(yearMonth) {
+        alert(`No attendance data found for ${yearMonth}`);
+    }
+        
+    function initializeAndPopulateDataTable(records) {
+        if (!Array.isArray(records) || records.length === 0) {
+            console.log("No records to display.");
+            return;
+        }
+
+        const transformedRecords = records.map(record => {
+            const parts = record.date.split(' '); // ["VIERNES", "12-ABRIL-2024"]
+            const dateParts = parts[1].split('-'); // ["12", "ABRIL", "2024"]
+            const sortableDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`; // "2024-ABRIL-12"
+            
+            return {
+                ...record,
+                sortableDate: sortableDate,
+                justification: record.justification || "" // Ensure empty string if no justification
+            };
+        });
+
+        if ($.fn.DataTable.isDataTable('#attendanceDataTable')) {
+            $('#attendanceDataTable').DataTable().clear().destroy();
+        }
+
+        $('#attendanceDataTable').DataTable({
+            data: transformedRecords,
+            pageLength: 25,
+            destroy: true,
+            columns: [
+                {
+                    title: "Fecha",
+                    data: "date",
+                    render: function(data, type, row) {
+                        return type === 'sort' ? row.sortableDate : data;
+                    }
+                },
+                { title: "Hora de Entrada", data: "entryTime" },
+                { title: "Hora de Salida", data: "exitTime" },
+                { title: "Estado", data: "status" },
+                { 
+                    title: "Justificación",
+                    data: "justification",
+                    defaultContent: "",
+                    render: function(data, type, row) {
+                    if (data && typeof data === 'object' && data.message) {
+                        return `${data.reason}: ${data.message}`;
+                    } else {
+                        return data || "";
+                    }
+                    }
+                }
+            ],
+            order: [[0, 'desc']],
+            createdRow: function(row, data, dataIndex) {
+                if (['Incompleto', 'Ausente', 'Tarde'].includes(data.status)) {
+                    $(row).addClass('text-danger clickable-row');
+                }
+            }
+        });
+
+        $('#attendanceDataTable tbody').on('click', 'tr', function() {
+            var data = $('#attendanceDataTable').DataTable().row(this).data();
+            if (!data) {
+                console.error('No data available for the selected row.');
+                return;
+            }
+            $('#currentRecordDate').val(data.date);
+            $('#justificacionModal .modal-title').text(`Justificación para ${data.date}`);
+            $('#justificacionModal').modal('show');
+            console.log('Selected Record Date:', data.date);
+        });
+    }
+ 
+    function convertMonthToNumber(monthName) {
+        const monthMap = {
+            'ENERO': '01', 'FEBRERO': '02', 'MARZO': '03', 'ABRIL': '04',
+            'MAYO': '05', 'JUNIO': '06', 'JULIO': '07', 'AGOSTO': '08',
+            'SEPTIEMBRE': '09', 'OCTUBRE': '10', 'NOVIEMBRE': '11', 'DICIEMBRE': '12'
+        };
+        return monthMap[monthName.toUpperCase()];
+    }
+
+    function parseYearMonthToDayjs(yearMonth) {
+        const [year, monthName] = yearMonth.split('-');
+        const month = convertMonthToNumber(monthName);
+        return dayjs(`${year}-${month}-01`); // Assumes format "YYYY-MM-DD"
+    }
+
+</script>
+</body>
+</html>

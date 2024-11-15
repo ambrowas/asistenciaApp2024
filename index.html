@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MENU</title>
+    <link rel="stylesheet" href="styles.css">
+    <audio id="popupAudio" src="assets/popup.mp3" hidden></audio>
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Include Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Firebase CDN (Browser-Compatible Version) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <style>
+        /* Centered content */
+        .centered-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 40px;
+        }
+        #welcomeMessage {
+            margin: 0;
+            margin-bottom: 5px;
+            font-size: 18px;
+        }
+        #employeeIDDisplay {
+            margin: 0;
+            font-size: 16px;
+        }
+  /* Login Modal background overlay */
+.login-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7); /* Darken background for better visibility */
+    z-index: 1000;
+}
+
+/* Login Modal dialog */
+.login-modal-dialog {
+    width: 80%; /* Set the modal width to 80% of the viewport for larger screens */
+    max-width: 600px; /* Maximum width for large screens */
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    padding: 20px; /* Add padding to ensure content fits nicely within */
+    box-sizing: border-box; /* Ensure padding does not affect width */
+}
+
+/* Header and footer spacing within modal */
+.login-modal .modal-header, .login-modal .modal-footer {
+    padding: 15px;
+    text-align: center;
+}
+
+/* Modal body content padding */
+.login-modal .modal-body {
+    padding: 20px;
+}
+
+/* Input fields in the login modal */
+#loginModal input {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    font-size: 16px;
+}
+
+/* Styles for the user image if displayed */
+#userImage {
+    display: none;
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+    </style>
+</head>
+<body>
+    <!-- Header Content -->
+    <div class="embassy-container">
+        <p class="embassy-text">EMBAJADA DE GUINEA ECUATORIAL<br>WASHINGTON DC</p>
+        <img src="Equatorial Guinea.png" alt="Equatorial Guinea Flag" class="embassy-flag">
+    </div>
+    <!-- Welcome Content -->
+    <div class="centered-content">
+        <div class="user-image-container">
+            <img id="userImage" src="" alt="User Image" />
+        </div>
+        <div class="logo-container">
+            <img src="asistnciA.png" alt="Logo" class="logo" />
+        </div>
+        <p id="welcomeMessage">Bienvenido</p>
+        <p id="employeeIDDisplay"></p>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="login-modal" id="loginModal" tabindex="-1" role="dialog" style="display:none;">
+        <div class="login-modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sign In</h5>
+                    <button type="button" class="close" onclick="closeLoginModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <input type="email" id="emailInput" placeholder="Email" required>
+                    <input type="password" id="passwordInput" placeholder="Password" required>
+                    <p id="loginError" style="color: red; display: none;">Error: Invalid login credentials</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="signIn()">Sign In</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeLoginModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<div class="login-modal" id="logoutModal" tabindex="-1" role="dialog" style="display:none;">
+    <div class="login-modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cerrar Sesión</h5>
+                <button type="button" class="close" onclick="closeLogoutModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <p>¿Seguro que te quieres desconectar?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="signOut()">Sí</button>
+                <button type="button" class="btn btn-secondary" onclick="closeLogoutModal()">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- Footer Buttons -->
+    <div class="button-container">
+        <button id="registrar-btn">REGISTRAR</button>
+        <button id="login-btn">CONECTAR</button>
+        <button id="informe-btn">INFORMES</button>
+        <button id="configuracion-btn">CONFIGURACION</button>
+        <button id="ayuda-btn">AYUDA</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js';
+        import { getStorage } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js';
+        import { collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js';
+    
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD32cqEuZx-ZAEnk6BCpxxneTzJvwK48dE",
+            authDomain: "asistncia-b2394.firebaseapp.com",
+            projectId: "asistncia-b2394",
+            storageBucket: "asistncia-b2394.appspot.com",
+            messagingSenderId: "523215954194",
+            appId: "1:523215954194:web:039c5425f0984526a8d3cb",
+            measurementId: "G-T7MDR9CEVT"
+        };
+    
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+    
+        // Show login modal when "LOGIN" button is clicked
+        document.getElementById('login-btn').addEventListener('click', () => {
+            document.getElementById('loginModal').style.display = 'flex';
+        });
+    
+        // Close login modal function
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('loginError').style.display = 'none';
+        }
+    
+        // Assign the closeLoginModal function to global scope
+        window.closeLoginModal = closeLoginModal;
+    
+        // Sign-In Function
+        async function signIn() {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+    
+            try {
+                // Authenticate the user
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+    
+                // Query Firestore to find the document with the matching email
+                const querySnapshot = await getDocs(query(collection(db, 'EMPLEADOS'), where('email', '==', email)));
+    
+                if (!querySnapshot.empty) {
+                    // Get the first matching document
+                    const doc = querySnapshot.docs[0];
+                    const userData = doc.data();
+    
+                    // Store retrieved data in local storage
+                    localStorage.setItem('userName', userData.nombre);
+                    localStorage.setItem('userPhotoURL', userData.userImageUrl);
+                    localStorage.setItem('employeeID', userData.employeeID);
+    
+                    // Update UI
+                    document.getElementById('welcomeMessage').textContent = userData.nombre;
+                    document.getElementById('userImage').src = userData.userImageUrl;
+                    document.getElementById('userImage').style.display = 'block';
+    
+                    closeLoginModal();
+                    window.location.href = 'index.html'; // Redirect to the main page
+                } else {
+                    throw new Error('No se encontraron datos de usuario en la base de datos.');
+                }
+            } catch (error) {
+                console.error("Error de inicio de sesión:", error);
+                document.getElementById('loginError').textContent = error.message;
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+    
+        // Assign the signIn function to global scope
+        window.signIn = signIn;
+    
+        // Retrieve and display stored user info on load
+        const userName = localStorage.getItem('userName');
+        const employeeID = localStorage.getItem('employeeID');
+        const userPhotoURL = localStorage.getItem('userPhotoURL');
+    
+        if (userName) document.getElementById('welcomeMessage').textContent = userName;
+        if (employeeID) document.getElementById('employeeIDDisplay').textContent = employeeID;
+        if (userPhotoURL) {
+            document.getElementById('userImage').src = userPhotoURL;
+            document.getElementById('userImage').style.display = 'block';
+        }
+        // Show logout modal
+function showLogoutModal() {
+    document.getElementById('logoutModal').style.display = 'flex';
+}
+
+// Close logout modal
+function closeLogoutModal() {
+    document.getElementById('logoutModal').style.display = 'none';
+}
+
+// Sign-out function
+async function signOut() {
+    try {
+        await auth.signOut();
+        // Clear local storage
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userPhotoURL');
+        localStorage.removeItem('employeeID');
+        // Reload the page to reflect changes
+        window.location.reload();
+    } catch (error) {
+        console.error('Error al cerrar sesión:', error);
+        alert('Error al cerrar sesión: ' + error.message);
+    }
+}
+
+// Assign logout modal functions to global scope
+window.showLogoutModal = showLogoutModal;
+window.closeLogoutModal = closeLogoutModal;
+window.signOut = signOut;
+
+    
+        // Update LOGIN and REGISTRAR button behavior
+        const loginBtn = document.getElementById('login-btn');
+        const registrarBtn = document.getElementById('registrar-btn');
+    
+        if (userName) {
+    // User is logged in
+    loginBtn.textContent = 'DESCONECTAR';
+    loginBtn.addEventListener('click', () => {
+        showLogoutModal(); // Show the logout modal
+    });
+
+    
+            // Hide the REGISTRAR button
+            registrarBtn.style.display = 'none';
+        } else {
+            // User is not logged in
+            loginBtn.textContent = 'CONECTAR';
+            loginBtn.addEventListener('click', () => {
+                // Show the login modal
+                document.getElementById('loginModal').style.display = 'flex';
+            });
+    
+            // Ensure REGISTRAR button is visible
+            registrarBtn.style.display = 'block';
+             // Add functionality to redirect when REGISTRAR is clicked
+    registrarBtn.addEventListener('click', () => {
+        window.location.href = 'registro.html'; // Redirect to the registration page
+    });
+}
+        
+    
+        // Footer button event listeners
+        document.getElementById('informe-btn').addEventListener('click', () => {
+            window.electronAPI.loadContent('informes.html');
+        });
+        document.getElementById('configuracion-btn').addEventListener('click', () => {
+            window.electronAPI.loadContent('configuracion.html');
+        });
+        document.getElementById('ayuda-btn').addEventListener('click', () => {
+            window.electronAPI.loadContent('ayuda.html');
+        });
+    </script>
+    

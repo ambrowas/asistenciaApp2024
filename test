@@ -1,0 +1,2 @@
+// Simple test for dayjs parsing
+console.log(dayjs("17:58:00", "HH:mm:ss").format("HH:mm:ss"));
